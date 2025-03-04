@@ -3,20 +3,21 @@ services:
         image: ghcr.io/foundry-rs/foundry:nightly
         platform: linux/amd64
         ports:
-            - "8545:8545"
+            - "8546:8545"
         volumes:
-            - ./:/dss
+            - ../:/dss
         environment:
             - ANVIL_IP_ADDR=0.0.0.0
-        working_dir: /dss/contracts
+        working_dir: /dss/onchain/contracts
         command: anvil --no-cors
 
     contract-builder:
         image: node:22.5-slim
+        user: "node"
         platform: linux/amd64
         volumes:
-            - ./:/dss
-        working_dir: /dss/contracts
+            - ../:/dss
+        working_dir: /dss/onchain/contracts
         depends_on:
             - anvil
         entrypoint:
@@ -29,10 +30,11 @@ services:
 
     contract-deployer:
         image: ghcr.io/foundry-rs/foundry:nightly
+        user: "root" 
         platform: linux/amd64
         volumes:
-            - ./:/dss
-        working_dir: /dss/contracts
+            - ../:/dss
+        working_dir: /dss/onchain/contracts
         depends_on:
             - anvil
         entrypoint:
@@ -50,11 +52,12 @@ services:
     aggregator:
         image: square-number-dss-aggregator
         build:
-            context: .
-            dockerfile: aggregator/Dockerfile
+            # Change context to parent directory which contains the workspace root
+            context: ..
+            dockerfile: karak_offchain/aggregator/Dockerfile
         platform: linux/amd64
         volumes:
-            - ./:/dss
+            - ../:/dss
         ports:
             - "3000:3000"
         healthcheck:
@@ -72,7 +75,7 @@ services:
             - COMMON_RATE_LIMIT_WINDOW_MS=1000
             - COMMON_RATE_LIMIT_MAX_REQUESTS=10000
             - PRIVATE_KEY=0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d
-            - BLOCK_NUMBER_STORE=/dss/contracts/block-number-store.json
+            - BLOCK_NUMBER_STORE=/dss/onchain/contracts/block-number-store.json
             - RUST_LOG=info
             - SQUARE_NUMBER_DSS_ADDRESS=0x9A9f2CCfdE556A7E9Ff0848998Aa4a0CFD8863AE
             - TXN_VERIFIER_ADDRESS=0x3Aa5ebB10DC797CAC828524e59A333d0A371443c
@@ -83,9 +86,12 @@ services:
     operator-1:
         image: square-number-dss-operator
         build:
-            context: .
-            dockerfile: operator/Dockerfile
+            # Change context to parent directory which contains the workspace root
+            context: ..
+            dockerfile: karak_offchain/operator/Dockerfile
         platform: linux/amd64
+        volumes:
+            - ../:/dss
         ports:
             - "8080:8080"
         environment:
@@ -111,9 +117,12 @@ services:
     operator-2:
         image: square-number-dss-operator
         build:
-            context: .
-            dockerfile: operator/Dockerfile
+            # Change context to parent directory which contains the workspace root
+            context: ..
+            dockerfile: karak_offchain/operator/Dockerfile
         platform: linux/amd64
+        volumes:
+            - ../:/dss
         ports:
             - "8081:8081"
         environment:

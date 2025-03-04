@@ -93,6 +93,8 @@ impl EventFetcher {
         Ok(self.provider.get_block_number().await?)
     }
 
+
+
     async fn fetch_events(&self, from_block: U64, to_block: U64) -> Result<Vec<Log>> {
         let filter = Filter::new()
             .address(self.contract_address)
