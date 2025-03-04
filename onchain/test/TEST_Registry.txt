@@ -1,0 +1,270 @@
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.25;
+
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {UUPSUpgradeable} from "@openzeppelin/contracts/proxy/utils/UUPSUpgradeable.sol";
+import {Time} from "@openzeppelin/contracts/utils/types/Time.sol";
+import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IParameters} from "./interfaces/IParameters.sol";
+import {IValidatorRegistrySystem} from "./interfaces/IRegistry.sol";
+import {INodeRegistrationSystem} from "./interfaces/IValidators.sol";
+import {IConsensusRestaking} from "./interfaces/IRestaking.sol";
+import {OperatorMapWithTime} from "./lib/OperatorMapWithTime.sol";
+import {EnumerableMap} from "./lib/EnumerableMap.sol";
+
+contract ValidatorRegistryCore is
+    IValidatorRegistrySystem,
+    OwnableUpgradeable,
+    UUPSUpgradeable
+{
+    using EnumerableSet for EnumerableSet.AddressSet;
+    using EnumerableMap for EnumerableMap.OperatorMap;
+    using OperatorMapWithTime for EnumerableMap.OperatorMap;
+
+    uint48 public SYSTEM_INITIALIZATION_TIME;
+
+    IParameters public systemParameters;
+
+    INodeRegistrationSystem public validatorNodes;
+
+    EnumerableMap.OperatorMap private nodeOperatorRegistry;
+
+    EnumerableSet.AddressSet private protocolRegistry;
+
+    uint256[43] private __gap;
+
+    modifier onlyRegisteredProtocol() {
+        if (!protocolRegistry.contains(msg.sender)) {
+            revert UnauthorizedProtocolAccess();
+        }
+        _;
+    }
+
+    function initializeSystem(
+        address systemAdmin,
+        address parametersContract,
+        address validatorContract
+    ) public initializer {
+        __Ownable_init(systemAdmin);
+
+        systemParameters = IParameters(parametersContract);
+        validatorNodes = INodeRegistrationSystem(validatorContract);
+
+        SYSTEM_INITIALIZATION_TIME = Time.timestamp();
+    }
+
+    function _authorizeUpgrade(
+        address newSystemImplementation
+    ) internal override onlyOwner {}
+
+  //left
+    function calculateEpochStartTime(
+        uint48 epochNumber
+    ) public view returns (uint48 startTimestamp) {
+        return
+            SYSTEM_INITIALIZATION_TIME +
+            epochNumber *
+            systemParameters.VALIDATOR_EPOCH_TIME();
+    }
+
+    function calculateEpochFromTimestamp(
+        uint48 timestamp
+    ) public view returns (uint48 epochNumber) {
+        return
+            (timestamp - SYSTEM_INITIALIZATION_TIME) /
+            systemParameters.VALIDATOR_EPOCH_TIME();
+    }
+
+    function fetchCurrentEpoch() public view returns (uint48 epochNumber) {
+        return calculateEpochFromTimestamp(Time.timestamp());
+    }
+
+    function validateNodeAuthorization(
+        address nodeOperator,
+        bytes20 nodeIdentityHash
+    ) public view returns (bool) {
+        if (nodeOperator == address(0) || nodeIdentityHash == bytes20(0)) {
+            revert QueryValidationFailed();
+        }
+        return
+            validatorNodes
+                .fetchNodeByIdentityHash(nodeIdentityHash)
+                .assignedOperatorAddress == nodeOperator;
+    }
+
+    function listSupportedProtocols()
+        public
+        view
+        returns (address[] memory protocolAddressList)
+    {
+        return protocolRegistry.values();
+    }
+
+    function validateNodeRegistration(
+        address nodeOperator
+    ) public view returns (bool) {
+        return nodeOperatorRegistry.contains(nodeOperator);
+    }
+
+    function fetchValidatorProfileBatch(
+        bytes20[] calldata nodeIdentityHashes
+    ) public view returns (ValidatorNodeProfile[] memory profileList) {
+        profileList = new ValidatorNodeProfile[](nodeIdentityHashes.length);
+        for (uint256 i = 0; i < nodeIdentityHashes.length; ++i) {
+            profileList[i] = fetchValidatorProfile(nodeIdentityHashes[i]);
+        }
+    }
+
+    function fetchValidatorProfile(
+        bytes20 nodeIdentityHash
+    ) public view returns (ValidatorNodeProfile memory profile) {
+        if (nodeIdentityHash == bytes20(0)) {
+            revert QueryValidationFailed();
+        }
+
+        uint48 epochStartTime = calculateEpochStartTime(
+            calculateEpochFromTimestamp(Time.timestamp())
+        );
+
+        INodeRegistrationSystem.ValidatorNodeDetails
+            memory validatorData = validatorNodes.fetchNodeByIdentityHash(
+                nodeIdentityHash
+            );
+
+        EnumerableMap.Operator memory operatorInfo = nodeOperatorRegistry.get(
+            validatorData.assignedOperatorAddress
+        );
+
+        profile.validatorIdentityHash = nodeIdentityHash;
+        profile.nodeManagerAddress = validatorData.assignedOperatorAddress;
+        profile.serviceEndpointUrl = operatorInfo.rpc;
+
+        (uint48 activationTime, uint48 deactivationTime) = nodeOperatorRegistry
+            .getTimes(validatorData.assignedOperatorAddress);
+        if (
+            !checkNodeStatusAtTime(
+                activationTime,
+                deactivationTime,
+                epochStartTime
+            )
+        ) {
+            return profile;
+        }
+
+        (
+            profile.collateralTokenList,
+            profile.collateralAmountList
+        ) = IConsensusRestaking(operatorInfo.middleware)
+            .getProviderCollateralTokens(validatorData.assignedOperatorAddress);
+
+        uint256 totalCollateral = 0;
+        for (uint256 i = 0; i < profile.collateralAmountList.length; ++i) {
+            totalCollateral += profile.collateralAmountList[i];
+        }
+
+        if (totalCollateral < systemParameters.OPERATOR_COLLATERAL_MINIMUM()) {
+            profile.operationalStatus = false;
+        } else {
+            profile.operationalStatus = true;
+        }
+
+        return profile;
+    }
+
+    function fetchNodeCollateralAmount(
+        address nodeOperator,
+        address collateralToken
+    ) public view returns (uint256) {
+        EnumerableMap.Operator memory operatorInfo = nodeOperatorRegistry.get(
+            nodeOperator
+        );
+
+        return
+            IConsensusRestaking(operatorInfo.middleware).getProviderCollateral(
+                nodeOperator,
+                collateralToken
+            );
+    }
+
+    function calculateTotalCollateral(
+        address collateralToken
+    ) public view returns (uint256 totalAmount) {
+        for (uint256 i = 0; i < nodeOperatorRegistry.length(); ++i) {
+            (
+                address nodeOperator,
+                EnumerableMap.Operator memory operatorInfo
+            ) = nodeOperatorRegistry.at(i);
+            totalAmount += IConsensusRestaking(operatorInfo.middleware)
+                .getProviderCollateral(nodeOperator, collateralToken);
+        }
+
+        return totalAmount;
+    }
+
+    function enrollValidatorNode(
+        address nodeAddress,
+        string calldata endpointUrl
+    ) external onlyRegisteredProtocol {
+        if (nodeOperatorRegistry.contains(nodeAddress)) {
+            revert ValidatorNodeAlreadyExists();
+        }
+
+        EnumerableMap.Operator memory nodeOperator = EnumerableMap.Operator(
+            endpointUrl,
+            msg.sender,
+            Time.timestamp()
+        );
+
+        nodeOperatorRegistry.set(nodeAddress, nodeOperator);
+    }
+
+    function removeValidatorNode(
+        address nodeAddress
+    ) public onlyRegisteredProtocol {
+        nodeOperatorRegistry.remove(nodeAddress);
+    }
+
+    function suspendValidatorNode(
+        address nodeAddress
+    ) external onlyRegisteredProtocol {
+        nodeOperatorRegistry.disable(nodeAddress);
+    }
+
+    function reactivateValidatorNode(
+        address nodeAddress
+    ) external onlyRegisteredProtocol {
+        nodeOperatorRegistry.enable(nodeAddress);
+    }
+
+    function checkNodeOperationalStatus(
+        address nodeAddress
+    ) public view returns (bool) {
+        if (!nodeOperatorRegistry.contains(nodeAddress)) {
+            revert ValidatorNodeNotFound();
+        }
+
+        (uint48 activationTime, uint48 deactivationTime) = nodeOperatorRegistry
+            .getTimes(nodeAddress);
+        return activationTime != 0 && deactivationTime == 0;
+    }
+
+    function registerProtocol(address protocolContract) public onlyOwner {
+        protocolRegistry.add(protocolContract);
+    }
+
+    function deregisterProtocol(address protocolContract) public onlyOwner {
+        protocolRegistry.remove(protocolContract);
+    }
+
+    function checkNodeStatusAtTime(
+        uint48 activationTime,
+        uint48 deactivationTime,
+        uint48 checkTimestamp
+    ) private pure returns (bool) {
+        return
+            activationTime != 0 &&
+            activationTime <= checkTimestamp &&
+            (deactivationTime == 0 || deactivationTime >= checkTimestamp);
+    }
+}
