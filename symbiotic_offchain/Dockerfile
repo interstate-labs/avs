@@ -1,38 +1,31 @@
-FROM rust:latest as builder
+# Use Alpine for a musl libc environment (for static linking)
+FROM rust:alpine as builder
 
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update && \
-    apt-get install -y pkg-config libssl-dev build-essential git && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+# Install build dependencies
+RUN apk add --no-cache musl-dev openssl-dev pkgconfig git build-base
 
 # Copy the entire project
 COPY . .
 
-# Show Rust version for debugging
-RUN rustc --version
+# Build with musl for static linking
+RUN rustup target add x86_64-unknown-linux-musl
+RUN cargo build --release --target x86_64-unknown-linux-musl
 
-# Build the application
-RUN cargo build --release
-
-# Create a smaller runtime image
-FROM debian:bullseye-slim
+# Use a minimal Alpine image for runtime
+FROM alpine:latest
 
 WORKDIR /app
 
-# Install runtime dependencies
-RUN apt-get update && \
-    apt-get install -y ca-certificates libssl-dev && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+# Install minimal runtime dependencies
+RUN apk add --no-cache ca-certificates
 
 # Create logs directory
 RUN mkdir -p /app/logs
 
-# Copy the built binary from the builder stage - using the correct binary name
-COPY --from=builder /app/target/release/symbiotic_offchain /app/symbiotic_offchain
+# Copy the statically linked binary from the builder stage
+COPY --from=builder /app/target/x86_64-unknown-linux-musl/release/symbiotic_offchain /app/symbiotic_offchain
 
 # Run the application with the FetchEvents command
-CMD ["/app/symbiotic_offchain", "FetchEvents"]
+CMD ["/app/symbiotic_offchain", "fetch-events"]
