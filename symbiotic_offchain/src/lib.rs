@@ -4,7 +4,7 @@ use ethers::{
     types::{Address, Bytes, H256},
     middleware::SignerMiddleware,
 };
-use std::{env, sync::Arc};
+use std::{ sync::Arc};
 
  mod abi;
 // Import the type directly from the module
@@ -21,12 +21,10 @@ impl SymbioticClient {
         contract_address: Address,
     ) -> Result<Self> {
         // Use Sepolia RPC URL from environment variable or default to public endpoint
-        let provider_url = env::var("SEPOLIA_RPC_URL")
-            .unwrap_or_else(|_| "https://rpc.sepolia.org".to_string());
+        let provider_url = "https://rpc.sepolia.org";
         
         // Get private key from environment variable
-        let private_key = env::var("PRIVATE_KEY")
-            .expect("PRIVATE_KEY environment variable must be set");
+        let private_key = "eaaa2702cad0c15b0cd341673c46d6936f87be6c3334c41a616201ea6931297a";
         
         // Sepolia chain ID is 11155111
         let chain_id: u64 = 11155111;

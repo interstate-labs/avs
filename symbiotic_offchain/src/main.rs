@@ -72,7 +72,10 @@ async fn main() -> Result<()> {
 
     let cli = Cli::parse();
 
+
+
     let client = SymbioticClient::new(dotenv::var("CONTRACT_ADDRESS")?.parse()?)?;
+    println!("client ");
 
     match cli.command {
         Commands::GetVaults => {
@@ -136,8 +139,10 @@ async fn main() -> Result<()> {
 
         Commands::FetchEvents => {
             // let contract_address = dotenv::var("CONTRACT_ADDRESS")?.parse()?;
+     
             let contract_address = Address::from_str(&std::env::var("CONTRACT_ADDRESS")?)?;
-    
+            println!("contract_address {} ",contract_address);
+  
             // let rpc_url = dotenv::var("ETHEREUM_RPC_URL")?;
             let rpc_url = std::env::var("ETHEREUM_RPC_URL")?;
             let provider = Provider::<Http>::try_from(rpc_url.clone())?;
