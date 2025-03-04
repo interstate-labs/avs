@@ -32,6 +32,7 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /app/target/release/square-number-dss-aggregator /app/square-number-dss-aggregator
-COPY --from=builder /app/contracts /app/contracts
+MKDIR -p contracts/KarakRestaking
+COPY ../onchain/src/KarakRestaking/KarakRestaking.sol contracts/KarakRestaking/
 
 ENTRYPOINT ["/app/square-number-dss-aggregator"]

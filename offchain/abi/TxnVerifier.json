@@ -3,84 +3,6 @@
 		"inputs": [
 			{
 				"internalType": "address",
-				"name": "_aggregator",
-				"type": "address"
-			},
-			{
-				"internalType": "contract ICore",
-				"name": "_core",
-				"type": "address"
-			}
-		],
-		"stateMutability": "nonpayable",
-		"type": "constructor"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"components": [
-					{
-						"internalType": "bool",
-						"name": "is_included",
-						"type": "bool"
-					},
-					{
-						"internalType": "uint64",
-						"name": "proposer_index",
-						"type": "uint64"
-					},
-					{
-						"internalType": "string",
-						"name": "block_number",
-						"type": "string"
-					}
-				],
-				"indexed": false,
-				"internalType": "struct TxnVerifier.OperatorResponse",
-				"name": "taskResponse",
-				"type": "tuple"
-			}
-		],
-		"name": "TaskResponseSubmitted",
-		"type": "event"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": false,
-				"internalType": "bytes32",
-				"name": "txnHash",
-				"type": "bytes32"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "blockNumber",
-				"type": "uint256"
-			}
-		],
-		"name": "TxnVerificationResult",
-		"type": "event"
-	},
-	{
-		"inputs": [],
-		"name": "aggregator",
-		"outputs": [
-			{
-				"internalType": "address",
-				"name": "",
-				"type": "address"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
 				"name": "operator",
 				"type": "address"
 			}
@@ -137,105 +59,33 @@
 	{
 		"inputs": [
 			{
-				"internalType": "bytes32",
-				"name": "taskRequest",
-				"type": "bytes32"
-			}
-		],
-		"name": "getTaskResponse",
-		"outputs": [
-			{
-				"components": [
-					{
-						"internalType": "bool",
-						"name": "is_included",
-						"type": "bool"
-					},
-					{
-						"internalType": "uint64",
-						"name": "proposer_index",
-						"type": "uint64"
-					},
-					{
-						"internalType": "string",
-						"name": "block_number",
-						"type": "string"
-					}
-				],
-				"internalType": "struct TxnVerifier.OperatorResponse",
-				"name": "",
-				"type": "tuple"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"components": [
-					{
-						"internalType": "string",
-						"name": "transaction_hash",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "block_number",
-						"type": "string"
-					}
-				],
-				"internalType": "struct TxnVerifier.Task",
-				"name": "taskRequest",
-				"type": "tuple"
-			}
-		],
-		"name": "getTaskResponseVerifiy",
-		"outputs": [
-			{
-				"components": [
-					{
-						"internalType": "bool",
-						"name": "is_included",
-						"type": "bool"
-					},
-					{
-						"internalType": "uint64",
-						"name": "proposer_index",
-						"type": "uint64"
-					},
-					{
-						"internalType": "string",
-						"name": "block_number",
-						"type": "string"
-					}
-				],
-				"internalType": "struct TxnVerifier.OperatorResponse",
-				"name": "",
-				"type": "tuple"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
 				"internalType": "address",
-				"name": "operator",
+				"name": "_aggregator",
+				"type": "address"
+			},
+			{
+				"internalType": "contract ICore",
+				"name": "_core",
 				"type": "address"
 			}
 		],
-		"name": "isOperatorRegistered",
-		"outputs": [
-			{
-				"internalType": "bool",
-				"name": "",
-				"type": "bool"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
+		"stateMutability": "nonpayable",
+		"type": "constructor"
+	},
+	{
+		"inputs": [],
+		"name": "OperatorAlreadyRegistered",
+		"type": "error"
+	},
+	{
+		"inputs": [],
+		"name": "OperatorAndIndexDontMatch",
+		"type": "error"
+	},
+	{
+		"inputs": [],
+		"name": "OperatorIsNotRegistered",
+		"type": "error"
 	},
 	{
 		"inputs": [
@@ -322,11 +172,21 @@
 		"type": "function"
 	},
 	{
+		"inputs": [],
+		"name": "SenderNotOperator",
+		"type": "error"
+	},
+	{
 		"inputs": [
 			{
-				"internalType": "bytes32",
+				"internalType": "string",
+				"name": "pubkey",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
 				"name": "taskRequest",
-				"type": "bytes32"
+				"type": "string"
 			},
 			{
 				"components": [
@@ -354,6 +214,228 @@
 		"name": "submitTaskResponse",
 		"outputs": [],
 		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"components": [
+					{
+						"internalType": "bool",
+						"name": "is_included",
+						"type": "bool"
+					},
+					{
+						"internalType": "uint64",
+						"name": "proposer_index",
+						"type": "uint64"
+					},
+					{
+						"internalType": "string",
+						"name": "block_number",
+						"type": "string"
+					}
+				],
+				"indexed": false,
+				"internalType": "struct TxnVerifier.OperatorResponse",
+				"name": "taskResponse",
+				"type": "tuple"
+			}
+		],
+		"name": "TaskResponseSubmitted",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "pubkey",
+				"type": "string"
+			},
+			{
+				"indexed": false,
+				"internalType": "bytes32",
+				"name": "txnHash",
+				"type": "bytes32"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "blockNumber",
+				"type": "uint256"
+			}
+		],
+		"name": "TxnVerificationResult",
+		"type": "event"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "operator",
+				"type": "address"
+			},
+			{
+				"internalType": "bytes",
+				"name": "extraData",
+				"type": "bytes"
+			}
+		],
+		"name": "unregistrationHook",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "pubkey",
+				"type": "string"
+			},
+			{
+				"internalType": "bytes32",
+				"name": "txnHash",
+				"type": "bytes32"
+			},
+			{
+				"internalType": "uint256",
+				"name": "blockNumber",
+				"type": "uint256"
+			}
+		],
+		"name": "verifyTransaction",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "aggregator",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "pubkey",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "taskRequest",
+				"type": "string"
+			}
+		],
+		"name": "getTaskResponse",
+		"outputs": [
+			{
+				"components": [
+					{
+						"internalType": "bool",
+						"name": "is_included",
+						"type": "bool"
+					},
+					{
+						"internalType": "uint64",
+						"name": "proposer_index",
+						"type": "uint64"
+					},
+					{
+						"internalType": "string",
+						"name": "block_number",
+						"type": "string"
+					}
+				],
+				"internalType": "struct TxnVerifier.OperatorResponse",
+				"name": "",
+				"type": "tuple"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"components": [
+					{
+						"internalType": "string",
+						"name": "pubkey",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "transaction_hash",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "block_number",
+						"type": "string"
+					}
+				],
+				"internalType": "struct TxnVerifier.Task",
+				"name": "taskRequest",
+				"type": "tuple"
+			}
+		],
+		"name": "getTaskResponseVerifiy",
+		"outputs": [
+			{
+				"components": [
+					{
+						"internalType": "bool",
+						"name": "is_included",
+						"type": "bool"
+					},
+					{
+						"internalType": "uint64",
+						"name": "proposer_index",
+						"type": "uint64"
+					},
+					{
+						"internalType": "string",
+						"name": "block_number",
+						"type": "string"
+					}
+				],
+				"internalType": "struct TxnVerifier.OperatorResponse",
+				"name": "",
+				"type": "tuple"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "operator",
+				"type": "address"
+			}
+		],
+		"name": "isOperatorRegistered",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
 		"type": "function"
 	},
 	{
@@ -426,23 +508,10 @@
 	{
 		"inputs": [
 			{
-				"internalType": "address",
-				"name": "operator",
-				"type": "address"
+				"internalType": "string",
+				"name": "",
+				"type": "string"
 			},
-			{
-				"internalType": "bytes",
-				"name": "extraData",
-				"type": "bytes"
-			}
-		],
-		"name": "unregistrationHook",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
 			{
 				"internalType": "bytes32",
 				"name": "",
@@ -458,24 +527,6 @@
 			}
 		],
 		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "bytes32",
-				"name": "txnHash",
-				"type": "bytes32"
-			},
-			{
-				"internalType": "uint256",
-				"name": "blockNumber",
-				"type": "uint256"
-			}
-		],
-		"name": "verifyTransaction",
-		"outputs": [],
-		"stateMutability": "nonpayable",
 		"type": "function"
 	}
 ]
