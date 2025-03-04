@@ -31,8 +31,8 @@ RUN apt-get update && \
 # Create logs directory
 RUN mkdir -p /app/logs
 
-# Copy the built binary from the builder stage
-COPY --from=builder /app/target/release/symbiotic-restaking /app/symbiotic-restaking
+# Copy the built binary from the builder stage - using the correct binary name
+COPY --from=builder /app/target/release/symbiotic_offchain /app/symbiotic_offchain
 
 # Run the application with the FetchEvents command
-CMD ["/app/symbiotic-restaking", "FetchEvents"]
+CMD ["/app/symbiotic_offchain", "FetchEvents"]
