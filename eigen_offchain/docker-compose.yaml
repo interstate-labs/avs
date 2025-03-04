@@ -1,0 +1,8 @@
+version: '3.8'
+services:
+  eigen-offchain:
+    build: .
+    environment:
+      - HOLESKY_RPC_URL=${HOLESKY_RPC_URL:-https://ethereum-holesky-rpc.publicnode.com}
+      - CONTRACT_ADDRESS=${CONTRACT_ADDRESS}
+      - PRIVATE_KEY=${PRIVATE_KEY}
