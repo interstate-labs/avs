@@ -1,0 +1,26 @@
+[package]
+name = "square-number-dss-aggregator"
+description = "Square Number DSS Aggregator"
+version = { workspace = true }
+authors = { workspace = true }
+repository = { workspace = true }
+edition = { workspace = true }
+
+[dependencies]
+alloy = { version = "0.2.1", features = ["full"] }
+axum = { version = "0.7.5", features = ["macros"] }
+chrono = { version = "0.4", features = ["serde"] }
+dotenvy = "0.15.7"
+envy = "0.4.2"
+eyre = "0.6.12"
+karak-rs = "=0.1.1"
+serde = { version = "1.0.207", features = ["derive"] }
+serde_json = "1.0.124"
+thiserror = "1.0"
+tokio = { version = "1.39.2", features = ["full"] }
+tower = { version = "0.5.0", features = ["buffer", "limit", "util"] }
+tower-http = { version = "0.5.2", features = ["full"] }
+tower_governor = { version = "0.4.2" }
+tracing = "0.1.40"
+tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
+url = { version = "2.5.2", features = ["serde"] }

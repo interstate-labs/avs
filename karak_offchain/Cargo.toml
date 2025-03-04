@@ -1,0 +1,9 @@
+[workspace]
+resolver = "2"
+members = ["aggregator", "operator"]
+
+[workspace.package]
+version = "0.1.0"
+authors = ["Andalusia Labs"]
+repository = "https://github.com/karak-network/square-number-dss-rs.git"
+edition = "2021"
