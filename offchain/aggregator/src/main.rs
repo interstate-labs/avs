@@ -5,6 +5,7 @@ use square_number_dss_aggregator::{aggregator::OperatorState, task::TaskService}
 use tokio::net::TcpListener;
 use tokio::signal;
 use tower::ServiceBuilder;
+use tracing::info;
 use tower_governor::{governor::GovernorConfig, GovernorLayer};
 use tower_http::trace::{self, TraceLayer};
 use tracing::{warn, Level};
@@ -39,7 +40,11 @@ async fn main() -> eyre::Result<()> {
             config: governor_config.clone(),
         }));
 
+        info!("config  {:?},{:?}",config.host,config.port);
+
     let listener = TcpListener::bind((config.host, config.port)).await?;
+
+    info!("listener {:?}",listener);
 
     // let task_service = Arc::new(TaskService::new(operator_state, config)?);
     let verifer_service= Arc::new(TaskService::new(operator_state, config)?);

@@ -11,7 +11,7 @@ pub mod health;
 pub mod operator;
 pub mod register;
 
-#[derive(Deserialize, Debug,Clone)]
+#[derive(Deserialize, Debug)]
 pub struct Config {
     pub host: IpAddr,
     pub port: u16,

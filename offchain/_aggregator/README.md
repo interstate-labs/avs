@@ -1,0 +1,3 @@
+# Aggregator
+
+The aggregator, functioning as an offline entity within the DSS, acts as a trusted central figure. Its primary role is to monitor the DSS contract for any new task requests. As soon as a task request is detected, the aggregator disseminates this request to all [Operators](../operators/README.md) registered in the DSS. After the operators finish executing the requests, the aggregator collects all responses from the operators and verifies their signatures to confirm that the responses are genuinely from the registered operators. Once verified, the aggregator calculates the median of all the received responses. The median is chosen to mitigate the impact of any outliers or erroneous calculations.

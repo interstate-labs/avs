@@ -7,7 +7,7 @@ use std::{fs, net::IpAddr, str::FromStr, sync::Arc};
 use task::BlockNumberData;
 use thiserror::Error;
 use url::Url;
-use tracing::info;
+
 pub mod aggregator;
 pub mod contract;
 pub mod error;
@@ -69,11 +69,9 @@ impl Config {
         let file_content = fs::read_to_string(&self.block_number_store)
             .map_err(|e| TaskError::LoadContractJsonError(e.to_string()))?;
 
-            info!("file_content {:?}",file_content);
-
         let block_number_data: BlockNumberData = serde_json::from_str(&file_content)
             .map_err(|e| TaskError::LoadContractJsonError(e.to_string()))?;
-            // info!("block_number_data {:?}",block_number_data);
+
         Ok(block_number_data.block_number)
     }
 

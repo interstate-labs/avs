@@ -7,7 +7,7 @@ use tower_governor::{governor::GovernorConfig, GovernorLayer};
 use tower_http::trace::{self, TraceLayer};
 use tracing::{warn, Level};
 use tracing_subscriber::EnvFilter;
-use tracing::info;
+
 #[tokio::main]
 async fn main() -> eyre::Result<()> {
     if dotenvy::dotenv().is_err() {
@@ -36,14 +36,7 @@ async fn main() -> eyre::Result<()> {
 
     let listener = TcpListener::bind((config.host, config.port)).await?;
 
-
-    info!("listener {:?}",listener);
-
-
     let registration_service = RegistrationService::new(config)?;
-
-    info!("registration_service {:?}",registration_service);
-
     tokio::spawn(async move { registration_service.start().await });
 
     axum::serve(

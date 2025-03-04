@@ -8,7 +8,6 @@ use karak_rs::contracts::Core::CoreInstance;
 use url::Url;
 use SquareNumberDSS::{TaskRequest, TaskResponse};
 use TxnVerifier::{Task,OperatorResponse};
-use tracing::error;
 use tracing::info;
 
 use crate::Config;
@@ -94,40 +93,16 @@ impl ContractManager {
         task_response: OperatorResponse,
     ) -> Result<(), TaskError> {
 
+        // info!("submit_task_response  {:?}",dss_task_request);
+        info!("submit_task_responseafter  {:?}",dss_task_request.transaction_hash);
 
-        info!("submit_task_responseafter  {:?}",dss_task_request.pubkey);
-        info!("dss_task_request.txn  {:?}",dss_task_request.transaction_hash);
-        info!("task_response.txn  {:?}",task_response.is_included);
-        info!("task_response.txn  {:?}",task_response.proposer_index);
 
-        let contract_response = (
-            task_response.is_included,
-            task_response.proposer_index,
-            task_response.block_number,
-        );
-    
         let _ = self
             .dss_instance
-            .submitTaskResponse(
-                dss_task_request.pubkey,
-                dss_task_request.transaction_hash,
-                contract_response.into()
-            )
+            .submitTaskResponse(dss_task_request.transaction_hash, task_response)
             .send()
             .await
-            .map_err(|e| {
-                error!("Contract call error: {:?}", e);
-                TaskError::ContractCallError
-            })?;
-    
-        // info!("Task response submitted successfully: {:?}", result.transaction_hash());
-
-        // let _ = self
-        //     .dss_instance
-        //     .submitTaskResponse(dss_task_request.pubkey,dss_task_request.transaction_hash, task_response)
-        //     .send()
-        //     .await
-        //     .map_err(|_| TaskError::ContractCallError)?;
+            .map_err(|_| TaskError::ContractCallError)?;
 
         Ok(())
     }
