@@ -51,7 +51,7 @@ services:
         image: square-number-dss-aggregator
         build:
             context: .
-            dockerfile: /root/avs/offchain/aggregator/Dockerfile
+            dockerfile: aggregator/Dockerfile
         platform: linux/amd64
         volumes:
             - ./:/dss
@@ -84,7 +84,7 @@ services:
         image: square-number-dss-operator
         build:
             context: .
-            dockerfile: /root/avs/offchain/operator/Dockerfile
+            dockerfile: operator/Dockerfile
         platform: linux/amd64
         ports:
             - "8080:8080"
@@ -112,7 +112,7 @@ services:
         image: square-number-dss-operator
         build:
             context: .
-            dockerfile: /root/avs/offchain/operator/Dockerfile
+            dockerfile: operator/Dockerfile
         platform: linux/amd64
         ports:
             - "8081:8081"

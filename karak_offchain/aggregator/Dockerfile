@@ -32,6 +32,7 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /app/target/release/square-number-dss-aggregator /app/square-number-dss-aggregator
+COPY --from=builder /app/onchain /app/onchain
 
 
 ENTRYPOINT ["/app/square-number-dss-aggregator"]

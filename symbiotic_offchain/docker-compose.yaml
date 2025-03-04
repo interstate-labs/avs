@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  symbiotic-restaking:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: symbiotic-restaking-service
+    restart: unless-stopped
+    environment:
+      - PRIVATE_KEY=eaaa2702cad0c15b0cd341673c46d6936f87be6c3334c41a616201ea6931297a
+      - ETHEREUM_RPC_URL=https://ethereum-sepolia-rpc.publicnode.com
+      - CONTRACT_ADDRESS=0x0237cdb6Eea2B719fe660A91cD05c2CC607C35d8
+      - RUST_LOG=info
+    volumes:
+      - ./logs:/app/logs
