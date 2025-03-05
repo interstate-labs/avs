@@ -17,22 +17,21 @@ use crate::TaskError;
 sol!(
     #[sol(rpc)]
     SquareNumberDSS,
-    "/app/abi/SquareNumberDSS.json",
+    "../abi/SquareNumberDSS.json",
 );
+
 
 sol!(
     #[sol(rpc)]
     TxnVerifier,
-    "/app/abi/TxnVerifier.json",
+    "../abi/TxnVerifier.json",
 );
-
-
 
 sol!(
     #[sol(rpc)]
     #[allow(clippy::too_many_arguments)]
     VaultAbi,
-    "/app/abi/Vault.json",
+    "../abi/Vault.json",
 );
 
 type RecommendedProvider = FillProvider<

@@ -27,6 +27,7 @@ async fn main() -> eyre::Result<()> {
 
     let governor_config = Arc::new(GovernorConfig::default());
     let operator_state = Arc::new(OperatorState::new());
+    info!("operator_state_operator_state {:?}",operator_state);
     let aggregator_app = square_number_dss_aggregator::routes(operator_state.clone());
     let app = aggregator_app
         .layer(

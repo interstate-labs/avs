@@ -65,17 +65,17 @@ pub enum TaskError {
 }
 
 impl Config {
-    pub fn load_block_number(&self) -> Result<u64, TaskError> {
-        let file_content = fs::read_to_string(&self.block_number_store)
-            .map_err(|e| TaskError::LoadContractJsonError(e.to_string()))?;
+    // pub fn load_block_number(&self) -> Result<u64, TaskError> {
+    //     let file_content = fs::read_to_string(&self.block_number_store)
+    //         .map_err(|e| TaskError::LoadContractJsonError(e.to_string()))?;
 
-            info!("file_content {:?}",file_content);
+    //         info!("file_content {:?}",file_content);
 
-        let block_number_data: BlockNumberData = serde_json::from_str(&file_content)
-            .map_err(|e| TaskError::LoadContractJsonError(e.to_string()))?;
-            // info!("block_number_data {:?}",block_number_data);
-        Ok(block_number_data.block_number)
-    }
+    //     let block_number_data: BlockNumberData = serde_json::from_str(&file_content)
+    //         .map_err(|e| TaskError::LoadContractJsonError(e.to_string()))?;
+    //         // info!("block_number_data {:?}",block_number_data);
+    //     Ok(block_number_data.block_number)
+    // }
 
     pub fn get_rpc_url(&self) -> Result<Url> {
         Ok(Url::parse(&self.rpc_url)?)

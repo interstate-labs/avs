@@ -3,12 +3,12 @@ use alloy::sol;
 sol!(
     #[sol(rpc)]
     SquareNumberDSS,
-    "/app/abi/SquareNumberDSS.json",
+    "../abi/SquareNumberDSS.json",
 );
 
 sol!(
     #[sol(rpc)]
     TxnVerifier,
-    "/app/abi/TxnVerifier.json",
+    "../abi/TxnVerifier.json",
 );
 

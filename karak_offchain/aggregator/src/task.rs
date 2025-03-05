@@ -94,9 +94,10 @@ impl TaskService {
         let square_number_address = config.txn_verifier_address;
         let dss_address = config.txn_verifier_address;
         let block_number_store = config.block_number_store.clone();
-        info!("aggregato_config {:?}",config);
+        info!("operator_state {:?}",operator_state.operators);
 
-        let block_number: u64 = config.load_block_number()?;
+        // let block_number: u64 = config.load_block_number()?;
+        let block_number:u64=3446144;
         let rpc_url = config.get_rpc_url()?;
         let private_key = config.get_private_key()?;
         let txn_verifier_address=config.txn_verifier_address;
@@ -291,7 +292,7 @@ impl TaskService {
 
        
         let square_number_address = self.square_number_address;
-        info!("verify_address {:?}",square_number_address);
+        info!("Verify_address {:?}",square_number_address);
         let next_block_to_check: u64 = self.block_number;
         
         // Get current block number
@@ -400,9 +401,9 @@ impl TaskService {
         start_block = end_block + 1;
     }
 
-    let _ = self
-        .write_block_number_to_file(&self.block_number_store, new_last_checked_block)
-        .await;
+    // let _ = self
+    //     .write_block_number_to_file(&self.block_number_store, new_last_checked_block)
+    //     .await;
 
     Ok(())
 }
@@ -573,9 +574,13 @@ impl TaskService {
         // Store any error to return if no operator succeeds
         let mut last_error: Option<TaskError> = None;
         info!("send_task_to_all_operators {:?}",task);
+
+      
     
         for operator in operators.iter() {
             let operator = operator.clone();
+
+            info!("operator_url {:?}",operator.url());
     
             match self
                 .client

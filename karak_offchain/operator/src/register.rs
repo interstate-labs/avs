@@ -147,92 +147,27 @@ impl RegistrationService {
     }
 
     async fn is_registered_in_dss(&self) -> Result<bool> {
+        info!("self.operator_address, {:?}", self.operator_address);
+        info!("dss_instance {:?}", self.dss_instance);
+    
+        let result = self
+        .dss_instance
+        .isOperatorRegistered(self.operator_address)
+        .call()
+        .await?;
+    
+    // Extract the boolean value from the custom return type
+    // The exact field name depends on how isOperatorRegisteredReturn is defined
+    // It might be _0, is_registered, registered, or something else
+    // Try one of these options:
+    
+    // Option 1: If the struct has a field named _0
 
-        info!("self.operator_address, {:?}",self.operator_address);
-        info!(",dss_instance {:?}",self.dss_instance);
-
-        Ok(self
-            .dss_instance
-            .isOperatorRegistered(self.operator_address)
-            .call()
-            .await?
-            ._0)
+    info!("result {:?}", result._0);
+    Ok(result._0) 
     }
 
 
-    // async fn is_registered_in_dss(&self) -> Result<bool> {
-    //     // Add retry mechanism and better error handling
-    //     const MAX_RETRIES: u32 = 3;
-    //     const RETRY_DELAY: Duration = Duration::from_secs(2);
-        
-    //     for attempt in 0..MAX_RETRIES {
-    //         match self.dss_instance.isOperatorRegistered(self.operator_address).call().await {
-    //             Ok(result) => {
-    //                 // Handle the raw response
-    //                 return Ok(result.into());
-    //             }
-    //             Err(e) => {
-    //                 error!(
-    //                     "Registration check failed (attempt {}/{}): {}",
-    //                     attempt + 1,
-    //                     MAX_RETRIES,
-    //                     e
-    //                 );
-                    
-    //                 if attempt < MAX_RETRIES - 1 {
-    //                     time::sleep(RETRY_DELAY).await;
-    //                     continue;
-    //                 }
-    //                 return Err(e.into());
-    //             }
-    //         }
-    //     }
-        
-    //     Err(eyre::eyre!("Failed to check registration status after {} attempts", MAX_RETRIES))
-    // }
-
-    // async fn register_in_dss(&self) -> Result<TransactionReceipt> {
-    //     const MAX_RETRIES: u32 = 3;
-    //     const RETRY_DELAY: Duration = Duration::from_secs(2);
-
-    //     for attempt in 0..MAX_RETRIES {
-    //         match self.core_instance
-    //             .registerOperatorToDSS(*self.dss_instance.address(), "0x".into())
-    //             .send()
-    //             .await
-    //         {
-    //             Ok(tx) => {
-    //                 info!("Registration transaction sent, waiting for receipt...");
-    //                 match tx.get_receipt().await {
-    //                     Ok(receipt) => return Ok(receipt),
-    //                     Err(e) => {
-    //                         error!("Failed to get transaction receipt: {}", e);
-    //                         if attempt < MAX_RETRIES - 1 {
-    //                             time::sleep(RETRY_DELAY).await;
-    //                             continue;
-    //                         }
-    //                         return Err(e.into());
-    //                     }
-    //                 }
-    //             }
-    //             Err(e) => {
-    //                 error!(
-    //                     "Failed to send registration transaction (attempt {}/{}): {}",
-    //                     attempt + 1,
-    //                     MAX_RETRIES,
-    //                     e
-    //                 );
-    //                 if attempt < MAX_RETRIES - 1 {
-    //                     time::sleep(RETRY_DELAY).await;
-    //                     continue;
-    //                 }
-    //                 return Err(e.into());
-    //             }
-    //         }
-    //     }
-
-    //     Err(eyre::eyre!("Failed to register operator after {} attempts", MAX_RETRIES))
-    // }
     
     async fn register_in_dss(&self) -> Result<TransactionReceipt> {
 
@@ -282,7 +217,7 @@ info!("Sending JSON payload: {}", json_payload);
 
     pub async fn register_operator_with_aggregator(&self) -> Result<()> {
 
-        info!("register_operator_with_aggregator");
+        info!("register_operator_with_aggregator_working");
 
         let url = self.aggregator_url.join("aggregator/registerOperator")?;
         let operator = AddressPayload {
