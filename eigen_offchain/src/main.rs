@@ -3,10 +3,13 @@ mod abi;
 
 use eigen_offchain::EigenLayerClient;
 use ethers::prelude::*;
-
+use eigen_offchain::event_fetcher::EventFetcher;
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 use ethers::types::{Address, H256, U256};
+
+// Make sure you're importing EigenLayerRestaking from the correct module
+use eigen_offchain::abi::EigenLayerRestaking;
 
 use std::{str::FromStr, sync::Arc};
 
@@ -25,6 +28,8 @@ enum Commands {
     
     /// Get AVS directory address
     GetAvsDirectory,
+
+    FetchEvents,
     
     
     /// Get whitelisted strategies
@@ -308,6 +313,32 @@ async fn main() -> Result<()> {
                 )
                 .await?;
             println!("Contract initialized successfully");
+        }
+
+        Commands::FetchEvents => {
+            // let contract_address = dotenv::var("CONTRACT_ADDRESS")?.parse()?;
+     
+            let contract_address = Address::from_str(&std::env::var("CONTRACT_ADDRESS")?)?;
+            println!("contract_address {} ",contract_address);
+  
+            // let rpc_url = dotenv::var("ETHEREUM_RPC_URL")?;
+            let rpc_url = std::env::var("ETHEREUM_RPC_URL")?;
+            let provider = Provider::<Http>::try_from(rpc_url.clone())?;
+    
+            println!("rpc_url {} contract_address{} ",rpc_url,contract_address);
+            let private_key = std::env::var("PRIVATE_KEY")?;
+            let chain_id: u64 = 17000; 
+            let wallet: LocalWallet = private_key.parse::<LocalWallet>()?.with_chain_id(chain_id);
+    
+
+            let client = SignerMiddleware::new(provider, wallet);
+
+            let contract = EigenLayerRestaking::new(contract_address, Arc::new(client));
+
+
+
+            let event_fetcher = EventFetcher::new(&rpc_url, contract_address)?;
+            event_fetcher.start_continuous_fetching(&contract,&rpc_url).await?;
         }
     }
 

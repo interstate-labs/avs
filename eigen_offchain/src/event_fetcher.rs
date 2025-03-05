@@ -1,7 +1,8 @@
+// src/event_fetcher.rs
 use anyhow::Result;
 use ethers::{
     prelude::*,
-    types::{Address, Filter, Log, U64},
+    types::{Address, Filter, Log, U64, H256, U256},
     providers::{Provider, Http},
 };
 use std::{
@@ -11,7 +12,7 @@ use std::{
 };
 
 // Import the ABI from abi.rs
-use crate::abi::SymbioticRestaking;
+use crate::abi::EigenLayerRestaking;
 
 pub struct EventFetcher {
     provider: Arc<Provider<Http>>,
@@ -27,11 +28,9 @@ impl EventFetcher {
         })
     }
 
-    pub async fn start_continuous_fetching(&self,  contract: &SymbioticRestaking<SignerMiddleware<Provider<Http>, LocalWallet>>,  rpc_url: &str) -> Result<()> {
-        let mut last_processed_block: U64 = 21981524.into();
+    pub async fn start_continuous_fetching(&self,  contract: &EigenLayerRestaking<SignerMiddleware<Provider<Http>, LocalWallet>>,  rpc_url: &str) -> Result<()> {
+        let mut last_processed_block: U64 = 3445180.into();
         println!("Starting continuous event fetching...");
-
-
 
         loop {
             let latest_block = self.get_latest_block().await?;
@@ -93,8 +92,6 @@ impl EventFetcher {
         Ok(self.provider.get_block_number().await?)
     }
 
-
-
     async fn fetch_events(&self, from_block: U64, to_block: U64) -> Result<Vec<Log>> {
         let filter = Filter::new()
             .address(self.contract_address)
@@ -104,10 +101,11 @@ impl EventFetcher {
         let logs = self.provider.get_logs(&filter).await?;
         Ok(logs)
     }
+    
     fn parse_custom_events(
         &self, 
         logs: Vec<Log>, 
-        contract: &SymbioticRestaking<SignerMiddleware<Provider<Http>, LocalWallet>>,
+        contract: &EigenLayerRestaking<SignerMiddleware<Provider<Http>, LocalWallet>>,
         rpc_url: &str
     ) -> Result<()> {
         // Specific event signature we're looking for
@@ -163,11 +161,11 @@ impl EventFetcher {
                         ).call().await {
                             Ok(current_verified_status) => {
                               
-                              print!("validator_id {:? }",validator_id);
+                              print!("validator_id {:? }", validator_id);
                         
-                              print!("tx_id {:? }",tx_id.to_fixed_bytes());
+                              print!("tx_id {:? }", tx_id.to_fixed_bytes());
 
-                              print!("block_number {:?}",block_number);
+                              print!("block_number {:?}", block_number);
 
 
                                 println!("Current Verification Status: {}", current_verified_status);
@@ -256,119 +254,6 @@ impl EventFetcher {
         Ok(())
     }
     
-    // fn parse_custom_events(
-    //     &self, 
-    //     logs: Vec<Log>, 
-    //     contract: &SymbioticRestaking<SignerMiddleware<Provider<Http>, LocalWallet>>,
-    //     rpc_url: &str
-    // ) -> Result<()> {
-    //     // Specific event signature we're looking for
-    //     let target_event_signature = H256::from_str("0x5a227abd3964ab468a622981e3cafd0f5ee720e97f16d5b249c8be49e366f870").unwrap();
-    
-    //     // Clone the provider for use in the async block
-    //     let provider = Arc::clone(&self.provider);
-    //     let contract_address = self.contract_address;
-    
-    //     for log in logs {
-    //         // Check if this is the specific event we're interested in
-    //         if let Some(topic) = log.topics.get(0) {
-    //             if *topic == target_event_signature {
-    //                 // Extract details from the topics
-    //                 if log.topics.len() >= 4 {
-    //                     // Topic 1: Validator ID (second topic)
-    //                     let validator_id = H256::from_slice(&log.topics[1][0..32]);
-                        
-    //                     // Topic 3: Block Number (third topic converted to U256)
-    //                     let block_number = U256::from_big_endian(&log.topics[2][0..32]);
-                        
-    //                     // Topic 4: Transaction ID (fourth topic)
-    //                     let tx_id = H256::from_slice(&log.topics[3][0..32]);
-
-    //                     println!("Event Details:");
-    //                     println!("Validator ID: {}", hex::encode(validator_id.as_bytes()));
-    //                     println!("Block Number: {}", block_number);
-    //                     println!("Transaction ID: {}", tx_id);
-
-    
-    //                     // Block number of the event log
-    //                     let event_block_number = log.block_number.unwrap_or_default();
-    
-    //                     // Transaction hash
-    //                     let tx_hash = log.transaction_hash.unwrap_or_default();
-    
-    //                     // Clone contract for async use
-    //                     let contract_clone = contract.clone();
-    //                    let rpc=rpc_url.to_string();
-    //                     // Spawn an async task
-    //                     tokio::spawn(async move {
-    //                         // Create a new provider for this task
-    //                         let local_provider = match Provider::<Http>::try_from(rpc) {
-    //                             Ok(p) => Arc::new(p),
-    //                             Err(e) => {
-    //                                 eprintln!("Failed to create provider: {}", e);
-    //                                 return;
-    //                             }
-    //                         };
-    
-    //                         // Check transaction status
-    //                         let status = match Self::check_transaction_in_block(&local_provider, tx_id, block_number).await {
-    //                             Ok(status) => status,
-    //                             Err(e) => {
-    //                                 eprintln!("Transaction check failed: {}", e);
-    //                                 return;
-    //                             }
-    //                         };
-
-                            
-    
-    //                         // Prepare validator pubkey (convert validator_id to bytes)
-    //                         // let validator_pubkey = _validator_id.as_bytes().to_vec();
-    //                         // let validator_pubkey: Bytes = _validator_id.as_bytes().to_vec().into();
-    //                         let validator_pubkey: Bytes = validator_id.as_bytes().to_vec().into();
-
-
-    //                         // Call verified_txn on the contract
-    //                         let tx_id_bytes: [u8; 32] = tx_id.to_fixed_bytes();
-    //                         println!("status tx_id_bytes block_number {:?} , {:?} {:?}", status, block_number,tx_id_bytes);
-    //                         match contract_clone.verified_txn(
-    //                             status,  // result
-    //                             validator_pubkey,  // validatorPubkey
-    //                             block_number,  // blockNumber
-    //                             tx_id_bytes  // txId
-    //                         ).send().await {
-    //                             Ok(pending_tx) => {
-    //                                 println!("verified_txn transaction sent. Hash: {:?}", pending_tx.tx_hash());
-                                    
-    //                                 // Optionally wait for the transaction to be mined
-    //                                 match pending_tx.await {
-    //                                     Ok(receipt) => {
-    //                                         println!("verified_txn transaction mined in block: {:?}", 
-    //                                             receipt.unwrap().block_number);
-    //                                     }
-    //                                     Err(e) => {
-    //                                         eprintln!("Error waiting for verified_txn transaction: {}", e);
-    //                                     }
-    //                                 }
-    //                             }
-    //                             Err(e) => {
-    //                                 eprintln!("Failed to send verified_txn transaction: {}", e);
-    //                             }
-    //                         }
-    
-    //                         // Print event details
-    //                         println!("Custom Event Detected:");
-    //                         println!("Block Number: {}", event_block_number);
-    //                         println!("Transaction ID: {}", tx_id);
-    //                         println!("Transaction Hash: {}", tx_hash);
-    //                         println!("---");
-    //                     });
-    //                 }
-    //             }
-    //         }
-    //     }
-    //     Ok(())
-    // }
-    
     // Separate function for transaction block checking
     async fn check_transaction_in_block(
         provider: &Arc<Provider<Http>>, 
@@ -410,8 +295,4 @@ impl EventFetcher {
             }
         }
     }
-    
 }
-
-
-

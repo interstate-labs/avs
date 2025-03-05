@@ -19,6 +19,86 @@ abigen!(
             "type": "function"
         },
         {
+            "inputs": [
+                {
+                    "internalType": "string",
+                    "name": "validatorPubkey",
+                    "type": "string"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "blockNumber",
+                    "type": "uint256"
+                },
+                {
+                    "internalType": "bytes32",
+                    "name": "txId",
+                    "type": "bytes32"
+                }
+            ],
+            "name": "slash",
+            "outputs": [],
+            "stateMutability": "nonpayable",
+            "type": "function"
+        },
+        {
+            "inputs": [
+                {
+                    "internalType": "string",
+                    "name": "validatorPubkey",
+                    "type": "string"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "blockNumber",
+                    "type": "uint256"
+                },
+                {
+                    "internalType": "bytes32",
+                    "name": "txId",
+                    "type": "bytes32"
+                }
+            ],
+            "name": "get_validator_response",
+            "outputs": [
+                {
+                    "internalType": "bool",
+                    "name": "verified",
+                    "type": "bool"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "inputs": [
+                {
+                    "internalType": "bool",
+                    "name": "result",
+                    "type": "bool"
+                },
+                {
+                    "internalType": "string",
+                    "name": "validatorPubkey",
+                    "type": "string"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "blockNumber",
+                    "type": "uint256"
+                },
+                {
+                    "internalType": "bytes32",
+                    "name": "txId",
+                    "type": "bytes32"
+                }
+            ],
+            "name": "verified_txn",
+            "outputs": [],
+            "stateMutability": "nonpayable",
+            "type": "function"
+        },
+        {
             "inputs": [{"internalType": "address", "name": "operator", "type": "address"}],
             "name": "deregisterOperatorFromAVS",
             "outputs": [],

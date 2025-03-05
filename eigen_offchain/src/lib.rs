@@ -1,5 +1,6 @@
-mod abi;
-use crate::abi::{EigenLayerRestaking};
+pub mod abi;
+// In lib.rs
+pub use crate::abi::EigenLayerRestaking;
 // use crate::abi::SignatureWithSaltAndExpiry;
 use crate::abi::SignatureWithSaltAndExpiry;
 use anyhow::Result;
@@ -8,6 +9,7 @@ use ethers::{
     types::{Address, Bytes, H256, U256},
     middleware::SignerMiddleware,
 };
+pub mod event_fetcher;
 use std::{env, sync::Arc, str::FromStr};
 
 // mod abi;

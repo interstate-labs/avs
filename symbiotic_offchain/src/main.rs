@@ -149,7 +149,7 @@ async fn main() -> Result<()> {
     
             println!("rpc_url {} contract_address{} ",rpc_url,contract_address);
             let private_key = std::env::var("PRIVATE_KEY")?;
-            let chain_id: u64 = 11155111; 
+            let chain_id: u64 = 1; 
             let wallet: LocalWallet = private_key.parse::<LocalWallet>()?.with_chain_id(chain_id);
     
 
