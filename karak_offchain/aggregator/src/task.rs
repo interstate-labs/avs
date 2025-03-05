@@ -291,7 +291,7 @@ impl TaskService {
 
        
         let square_number_address = self.square_number_address;
-        info!("square_number_address {:?}",square_number_address);
+        info!("verify_address {:?}",square_number_address);
         let next_block_to_check: u64 = self.block_number;
         
         // Get current block number
