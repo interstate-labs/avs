@@ -1,146 +1,72 @@
+version: '3.8'
+
 services:
-    anvil:
-        image: ghcr.io/foundry-rs/foundry:nightly
-        platform: linux/amd64
-        ports:
-            - "8546:8545"
-        volumes:
-            - ../:/dss
-        environment:
-            - ANVIL_IP_ADDR=0.0.0.0
-        working_dir: /dss/onchain/contracts
-        command: anvil --no-cors
+  aggregator:
+    build:
+      context: .
+      dockerfile: aggregator/Dockerfile
+    container_name: karak-aggregator
+    ports:
+      - "3008:3008"
+    environment:
+      - PORT=3008
+      - HOST=0.0.0.0
+      - HEARTBEAT=5000
+      - RPC_URL=https://ethereum-holesky-rpc.publicnode.com
+      - CORS_ORIGIN=*
+      - COMMON_RATE_LIMIT_WINDOW_MS=1000
+      - COMMON_RATE_LIMIT_MAX_REQUESTS=10000
+      - PRIVATE_KEY=6d35c1bdf469031cfe3cbaddd57ca69a36835a39c2a6f2cefc17c804851b0635
+      - BLOCK_NUMBER_STORE=/app/block-number-store.json
+      - RUST_LOG=info
+      - SQUARE_NUMBER_DSS_ADDRESS=0x9A9f2CCfdE556A7E9Ff0848998Aa4a0CFD8863AE
+      - TXN_VERIFIER_ADDRESS=0xCbb651f2F7FEd1264224D20F75BEF371549E71C9
+      - CORE_ADDRESS=0x9bd03768a7DCc129555dE410FF8E85528A4F88b5
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3008/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
 
-    contract-builder:
-        image: node:22.5-slim
-        user: "node"
-        platform: linux/amd64
-        volumes:
-            - ../:/dss
-        working_dir: /dss/onchain/contracts
-        depends_on:
-            - anvil
-        entrypoint:
-            - /bin/sh
-            - -c
-            - |
-              sleep 3 &&
-              yarn &&
-              echo "success" > /dss/builder.status
+  operator:
+    build:
+      context: .
+      dockerfile: operator/Dockerfile
+    container_name: karak-operator
+    ports:
+      - "3009:3009"
+    environment:
+      - PORT=3009
+      - HOST=0.0.0.0
+      - DOMAIN_URL=http://0.0.0.0:3009
+      - AGGREGATOR_URL=http://aggregator:3008
+      - HEARTBEAT=5000
+      - RPC_URL=https://ethereum-holesky-rpc.publicnode.com
+      - CORS_ORIGIN=*
+      - COMMON_RATE_LIMIT_WINDOW_MS=1000
+      - COMMON_RATE_LIMIT_MAX_REQUESTS=10000
+      - PRIVATE_KEY=6d35c1bdf469031cfe3cbaddd57ca69a36835a39c2a6f2cefc17c804851b0635
+      - BLOCK_NUMBER_STORE=/app/block-number-store.json
+      - RUST_LOG=info
+      - SQUARE_NUMBER_DSS_ADDRESS=0x9A9f2CCfdE556A7E9Ff0848998Aa4a0CFD8863AE
+      - TXN_VERIFIER_ADDRESS=0xCbb651f2F7FEd1264224D20F75BEF371549E71C9
+      - CORE_ADDRESS=0x9bd03768a7DCc129555dE410FF8E85528A4F88b5
+      - RUST_BACKTRACE=full
+    volumes:
+      - ./data:/app/data
+    depends_on:
+      - aggregator
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3009/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
 
-    contract-deployer:
-        image: ghcr.io/foundry-rs/foundry:nightly
-        user: "root" 
-        platform: linux/amd64
-        volumes:
-            - ../:/dss
-        working_dir: /dss/onchain/contracts
-        depends_on:
-            - anvil
-        entrypoint:
-            - /bin/sh
-            - -c
-            - |
-              while [ ! -f /dss/builder.status ] || [ $(cat /dss/builder.status) != 'success' ]; do
-              echo 'Waiting for contract-builder to complete...';
-              sleep 2;
-              done &&
-              forge script script/deploy.sol --rpc-url http://anvil:8545 --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 --broadcast --skip-simulation &&
-              rm /dss/builder.status &&
-              echo "success" > /dss/deploy.status
-
-    aggregator:
-        image: square-number-dss-aggregator
-        build:
-            # Change context to parent directory which contains the workspace root
-            context: ..
-            dockerfile: karak_offchain/aggregator/Dockerfile
-        platform: linux/amd64
-        volumes:
-            - ../:/dss
-        ports:
-            - "3000:3000"
-        healthcheck:
-            test: [ "CMD", "curl", "-f", "http://localhost:3000/health" ]
-            interval: 30s
-            timeout: 10s
-            retries: 20
-            start_period: 10s
-        environment:
-            - PORT=3000
-            - HOST=0.0.0.0
-            - HEARTBEAT=5000
-            - RPC_URL=http://anvil:8545
-            - CORS_ORIGIN=*
-            - COMMON_RATE_LIMIT_WINDOW_MS=1000
-            - COMMON_RATE_LIMIT_MAX_REQUESTS=10000
-            - PRIVATE_KEY=0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d
-            - BLOCK_NUMBER_STORE=/dss/onchain/contracts/block-number-store.json
-            - RUST_LOG=info
-            - SQUARE_NUMBER_DSS_ADDRESS=0x9A9f2CCfdE556A7E9Ff0848998Aa4a0CFD8863AE
-            - TXN_VERIFIER_ADDRESS=0x3Aa5ebB10DC797CAC828524e59A333d0A371443c
-            - CORE_ADDRESS=0x9bd03768a7DCc129555dE410FF8E85528A4F88b5
-        entrypoint: >
-            sh -c " while [ ! -f /dss/deploy.status ] || [ \$(cat /dss/deploy.status) != 'success' ]; do echo 'Waiting for contract-deployer to complete...'; sleep 2; done && /app/square-number-dss-aggregator "
-
-    operator-1:
-        image: square-number-dss-operator
-        build:
-            # Change context to parent directory which contains the workspace root
-            context: ..
-            dockerfile: karak_offchain/operator/Dockerfile
-        platform: linux/amd64
-        volumes:
-            - ../:/dss
-        ports:
-            - "8080:8080"
-        environment:
-            - PORT=8080
-            - HOST=0.0.0.0
-            - DOMAIN_URL=http://operator-1:8080
-            - RPC_URL=http://anvil:8545
-            - CORS_ORIGIN=*
-            - COMMON_RATE_LIMIT_WINDOW_MS=1000
-            - COMMON_RATE_LIMIT_MAX_REQUESTS=10000
-            - AGGREGATOR_URL=http://aggregator:3000
-            - HEARTBEAT=1000
-            - PRIVATE_KEY=0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a
-            - RUST_LOG=info
-            - SQUARE_NUMBER_DSS_ADDRESS=0x9A9f2CCfdE556A7E9Ff0848998Aa4a0CFD8863AE
-            - TXN_VERIFIER_ADDRESS=0x3Aa5ebB10DC797CAC828524e59A333d0A371443c
-            - CORE_ADDRESS=0x9bd03768a7DCc129555dE410FF8E85528A4F88b5
-            - RUST_BACKTRACE=full
-        depends_on:
-            aggregator:
-                condition: service_healthy
-
-    operator-2:
-        image: square-number-dss-operator
-        build:
-            # Change context to parent directory which contains the workspace root
-            context: ..
-            dockerfile: karak_offchain/operator/Dockerfile
-        platform: linux/amd64
-        volumes:
-            - ../:/dss
-        ports:
-            - "8081:8081"
-        environment:
-            - PORT=8081
-            - HOST=0.0.0.0
-            - DOMAIN_URL=http://operator-2:8081
-            - RPC_URL=http://anvil:8545
-            - CORS_ORIGIN=*
-            - COMMON_RATE_LIMIT_WINDOW_MS=1000
-            - COMMON_RATE_LIMIT_MAX_REQUESTS=10000
-            - AGGREGATOR_URL=http://aggregator:3000
-            - HEARTBEAT=1000
-            - PRIVATE_KEY=0x7c852118294e51e653712a81e05800f419141751be58f605c371e15141b007a6
-            - RUST_LOG=info
-            - SQUARE_NUMBER_DSS_ADDRESS=0x9A9f2CCfdE556A7E9Ff0848998Aa4a0CFD8863AE
-            - TXN_VERIFIER_ADDRESS=0x3Aa5ebB10DC797CAC828524e59A333d0A371443c
-            - CORE_ADDRESS=0x9bd03768a7DCc129555dE410FF8E85528A4F88b5
-            - RUST_BACKTRACE=full
-        depends_on:
-            aggregator:
-                condition: service_healthy
+volumes:
+  data:
