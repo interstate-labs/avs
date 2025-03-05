@@ -10,7 +10,12 @@ abigen!(
         function registerOperator(address operatorAddr, string rpc) external
         function isVaultEnabled(address vault) external view returns (bool)
         function getCurrentTime() external view returns (uint48 epoch)
-        function initialize(address _owner, address _parameters, address _symbioticNetwork, address _symbioticOperatorRegistry, address _symbioticOperatorNetOptIn, address _symbioticVaultFactory) external
+        function initialize(address _parameters, address _symbioticNetwork, address _symbioticOperatorRegistry, address _symbioticOperatorNetOptIn, address _symbioticVaultFactory) external
         function verified_txn(bool result, string validatorPubkey, uint256 blockNumber, bytes32 txId) external
+        function addOwner(address newOwner) external
+        function removeOwner(address owner) external
+        function executeRemoveOwner(address owner) external
+        function isOwner(address owner) external view returns (bool)
+        function getRemoveOwnerTimeRemaining(address owner) external view returns (uint256)
     ]"#,
 );

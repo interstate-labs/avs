@@ -29,7 +29,7 @@ impl EventFetcher {
     }
 
     pub async fn start_continuous_fetching(&self,  contract: &EigenLayerRestaking<SignerMiddleware<Provider<Http>, LocalWallet>>,  rpc_url: &str) -> Result<()> {
-        let mut last_processed_block: U64 = 3445180.into();
+        let mut last_processed_block: U64 = 3445973.into();
         println!("Starting continuous event fetching...");
 
         loop {

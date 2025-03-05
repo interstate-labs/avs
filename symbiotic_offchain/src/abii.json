@@ -1,5 +1,10 @@
 [
 	{
+		"inputs": [],
+		"stateMutability": "nonpayable",
+		"type": "constructor"
+	},
+	{
 		"inputs": [
 			{
 				"internalType": "address",
@@ -74,6 +79,11 @@
 	},
 	{
 		"inputs": [],
+		"name": "NoPendingRequest",
+		"type": "error"
+	},
+	{
+		"inputs": [],
 		"name": "NodeProviderNotActive",
 		"type": "error"
 	},
@@ -118,28 +128,6 @@
 		"type": "error"
 	},
 	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "owner",
-				"type": "address"
-			}
-		],
-		"name": "OwnableInvalidOwner",
-		"type": "error"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "account",
-				"type": "address"
-			}
-		],
-		"name": "OwnableUnauthorizedAccount",
-		"type": "error"
-	},
-	{
 		"inputs": [],
 		"name": "ParticipantExists",
 		"type": "error"
@@ -173,6 +161,11 @@
 	{
 		"inputs": [],
 		"name": "StrategyNotAllowed",
+		"type": "error"
+	},
+	{
+		"inputs": [],
+		"name": "TimerNotExpired",
 		"type": "error"
 	},
 	{
@@ -239,17 +232,43 @@
 			{
 				"indexed": true,
 				"internalType": "address",
-				"name": "previousOwner",
-				"type": "address"
-			},
-			{
-				"indexed": true,
-				"internalType": "address",
 				"name": "newOwner",
 				"type": "address"
 			}
 		],
-		"name": "OwnershipTransferred",
+		"name": "OwnerAdded",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "owner",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "unlockTime",
+				"type": "uint256"
+			}
+		],
+		"name": "OwnerRemovalRequested",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "removedOwner",
+				"type": "address"
+			}
+		],
+		"name": "OwnerRemoved",
 		"type": "event"
 	},
 	{
@@ -411,11 +430,37 @@
 		"inputs": [
 			{
 				"internalType": "address",
+				"name": "newOwner",
+				"type": "address"
+			}
+		],
+		"name": "addOwner",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
 				"name": "vault",
 				"type": "address"
 			}
 		],
 		"name": "deregisterVault",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "owner",
+				"type": "address"
+			}
+		],
+		"name": "executeRemoveOwner",
 		"outputs": [],
 		"stateMutability": "nonpayable",
 		"type": "function"
@@ -549,6 +594,25 @@
 		"type": "function"
 	},
 	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "owner",
+				"type": "address"
+			}
+		],
+		"name": "getRemoveOwnerTimeRemaining",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
 		"inputs": [],
 		"name": "getWhitelistedVaults",
 		"outputs": [
@@ -574,9 +638,9 @@
 				"type": "uint256"
 			},
 			{
-				"internalType": "string",
+				"internalType": "bytes32",
 				"name": "txId",
-				"type": "string"
+				"type": "bytes32"
 			}
 		],
 		"name": "get_validator_response",
@@ -592,11 +656,6 @@
 	},
 	{
 		"inputs": [
-			{
-				"internalType": "address",
-				"name": "_owner",
-				"type": "address"
-			},
 			{
 				"internalType": "address",
 				"name": "_parameters",
@@ -632,11 +691,11 @@
 		"inputs": [
 			{
 				"internalType": "address",
-				"name": "vault",
+				"name": "owner",
 				"type": "address"
 			}
 		],
-		"name": "isVaultEnabled",
+		"name": "isOwner",
 		"outputs": [
 			{
 				"internalType": "bool",
@@ -648,13 +707,19 @@
 		"type": "function"
 	},
 	{
-		"inputs": [],
-		"name": "owner",
-		"outputs": [
+		"inputs": [
 			{
 				"internalType": "address",
-				"name": "",
+				"name": "vault",
 				"type": "address"
+			}
+		],
+		"name": "isVaultEnabled",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
 			}
 		],
 		"stateMutability": "view",
@@ -678,6 +743,35 @@
 		"name": "pauseVault",
 		"outputs": [],
 		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"name": "pendingRemovals",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "ownerAddress",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "requestTime",
+				"type": "uint256"
+			},
+			{
+				"internalType": "bool",
+				"name": "isPending",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
 		"type": "function"
 	},
 	{
@@ -725,8 +819,14 @@
 		"type": "function"
 	},
 	{
-		"inputs": [],
-		"name": "renounceOwnership",
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "owner",
+				"type": "address"
+			}
+		],
+		"name": "removeOwner",
 		"outputs": [],
 		"stateMutability": "nonpayable",
 		"type": "function"
@@ -786,19 +886,6 @@
 			}
 		],
 		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "newOwner",
-				"type": "address"
-			}
-		],
-		"name": "transferOwnership",
-		"outputs": [],
-		"stateMutability": "nonpayable",
 		"type": "function"
 	},
 	{

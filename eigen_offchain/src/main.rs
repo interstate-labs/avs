@@ -23,6 +23,25 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
+    AddOwner {
+        new_owner: String,
+    },
+    
+    /// Remove an owner
+    RemoveOwner {
+        owner: String,
+    },
+    
+    /// Execute owner removal
+    ExecuteRemoveOwner {
+        owner: String,
+    },
+    
+    /// Check if an address is an owner
+    IsOwner {
+        address: String,
+    },
+
     /// Get the interface version
     GetInterfaceVersion,
     
@@ -117,7 +136,6 @@ enum Commands {
     
     /// Initialize the contract
     Initialize {
-        owner: String,
         parameters: String,
         avs_directory: String,
         delegation_manager: String,
@@ -301,10 +319,9 @@ async fn main() -> Result<()> {
             println!("Ownership transferred successfully");
         }
         
-        Commands::Initialize { owner, parameters, avs_directory, delegation_manager, strategy_manager, restaking_helper } => {
+        Commands::Initialize { parameters, avs_directory, delegation_manager, strategy_manager, restaking_helper } => {
             client
                 .initialize(
-                    Address::from_str(&owner)?,
                     Address::from_str(&parameters)?,
                     Address::from_str(&avs_directory)?,
                     Address::from_str(&delegation_manager)?,
@@ -313,6 +330,33 @@ async fn main() -> Result<()> {
                 )
                 .await?;
             println!("Contract initialized successfully");
+        }
+        Commands::AddOwner { new_owner } => {
+            client
+                .add_owner(Address::from_str(&new_owner)?)
+                .await?;
+            println!("Owner added successfully");
+        }
+        
+        Commands::RemoveOwner { owner } => {
+            client
+                .remove_owner(Address::from_str(&owner)?)
+                .await?;
+            println!("Owner removal request submitted successfully");
+        }
+        
+        Commands::ExecuteRemoveOwner { owner } => {
+            client
+                .execute_remove_owner(Address::from_str(&owner)?)
+                .await?;
+            println!("Owner removed successfully");
+        }
+        
+        Commands::IsOwner { address } => {
+            let is_owner = client
+                .is_owner(Address::from_str(&address)?)
+                .await?;
+            println!("Is Owner: {}", is_owner);
         }
 
         Commands::FetchEvents => {

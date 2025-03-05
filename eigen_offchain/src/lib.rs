@@ -132,7 +132,6 @@ impl EigenLayerClient {
     // Initialize the contract
     pub async fn initialize(
         &self,
-        owner: Address,
         parameters: Address,
         eigenlayer_avs_directory: Address,
         eigenlayer_delegation_manager: Address,
@@ -140,7 +139,6 @@ impl EigenLayerClient {
         restaking_helper: Address,
     ) -> Result<()> {
         let tx = self.contract.initialize(
-            owner,
             parameters,
             eigenlayer_avs_directory,
             eigenlayer_delegation_manager,
@@ -156,7 +154,39 @@ impl EigenLayerClient {
     pub async fn is_strategy_enabled(&self, strategy: Address) -> Result<bool> {
         Ok(self.contract.is_strategy_enabled(strategy).call().await?)
     }
+    pub async fn add_owner(&self, new_owner: Address) -> Result<()> {
+        let tx = self.contract.add_owner(new_owner);
+        let pending_tx = tx.send().await?;
+        println!("Owner added: {:?}", pending_tx.tx_hash());
+        Ok(())
+    }
 
+    // Remove an owner (initiates the removal process)
+    pub async fn remove_owner(&self, owner: Address) -> Result<()> {
+        let tx = self.contract.remove_owner(owner);
+        let pending_tx = tx.send().await?;
+        println!("Owner removal initiated: {:?}", pending_tx.tx_hash());
+        Ok(())
+    }
+
+    // Execute the removal of an owner (completes the removal process)
+    pub async fn execute_remove_owner(&self, owner: Address) -> Result<()> {
+        let tx = self.contract.execute_remove_owner(owner);
+        let pending_tx = tx.send().await?;
+        println!("Owner removal executed: {:?}", pending_tx.tx_hash());
+        Ok(())
+    }
+
+    // Check if an address is an owner
+    pub async fn is_owner(&self, address: Address) -> Result<bool> {
+        Ok(self.contract.is_owner(address).call().await?)
+    }
+
+    // Get pending removal details
+    pub async fn get_pending_removal(&self, owner: Address) -> Result<(Address, U256, bool)> {
+        let pending_removal = self.contract.pending_removals(owner).call().await?;
+        Ok((pending_removal.0, pending_removal.1, pending_removal.2))
+    }
     // Get the contract owner
     pub async fn get_owner(&self) -> Result<Address> {
         Ok(self.contract.owner().call().await?)

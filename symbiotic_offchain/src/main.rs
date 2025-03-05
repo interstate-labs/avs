@@ -63,6 +63,36 @@ enum Commands {
     /// Get current epoch
     GetCurrentEpoch,
 
+    /// Add a new owner address
+    AddOwner {
+        /// Address of the new owner
+        owner_address: String,
+    },
+
+    /// Request owner removal (initiates 1-min delay)
+    RemoveOwner {
+        /// Address of the owner to remove
+        owner_address: String,
+    },
+
+    /// Execute pending owner removal after delay
+    ExecuteRemoveOwner {
+        /// Address of the owner to remove
+        owner_address: String,
+    },
+
+    /// Check if an address is an owner
+    CheckOwner {
+        /// Address to check
+        owner_address: String,
+    },
+
+    /// Get time remaining for a pending owner removal
+    GetRemoveOwnerTimeRemaining {
+        /// Address of the owner with pending removal
+        owner_address: String, 
+    },
+
     FetchEvents,
 }
 
@@ -71,8 +101,6 @@ async fn main() -> Result<()> {
     dotenv::dotenv().ok();
 
     let cli = Cli::parse();
-
-
 
     let client = SymbioticClient::new(dotenv::var("CONTRACT_ADDRESS")?.parse()?)?;
     println!("client ");
@@ -137,6 +165,42 @@ async fn main() -> Result<()> {
             println!("Current epoch: {}", epoch);
         }
 
+        Commands::AddOwner { owner_address } => {
+            client
+                .add_owner(Address::from_str(&owner_address)?)
+                .await?;
+            println!("Owner added successfully: {}", owner_address);
+        }
+
+        Commands::RemoveOwner { owner_address } => {
+            client
+                .remove_owner(Address::from_str(&owner_address)?)
+                .await?;
+            println!("Owner removal request initiated for: {}", owner_address);
+            println!("Wait for 1 minute before executing removal");
+        }
+
+        Commands::ExecuteRemoveOwner { owner_address } => {
+            client
+                .execute_remove_owner(Address::from_str(&owner_address)?)
+                .await?;
+            println!("Owner removal executed successfully: {}", owner_address);
+        }
+
+        Commands::CheckOwner { owner_address } => {
+            let is_owner = client
+                .is_owner(Address::from_str(&owner_address)?)
+                .await?;
+            println!("Is owner: {}", is_owner);
+        }
+
+        Commands::GetRemoveOwnerTimeRemaining { owner_address } => {
+            let time_remaining = client
+                .get_remove_owner_time_remaining(Address::from_str(&owner_address)?)
+                .await?;
+            println!("Time remaining for removal (seconds): {}", time_remaining);
+        }
+
         Commands::FetchEvents => {
             // let contract_address = dotenv::var("CONTRACT_ADDRESS")?.parse()?;
      
@@ -149,7 +213,7 @@ async fn main() -> Result<()> {
     
             println!("rpc_url {} contract_address{} ",rpc_url,contract_address);
             let private_key = std::env::var("PRIVATE_KEY")?;
-            let chain_id: u64 = 1; 
+            let chain_id: u64 = 17000; 
             let wallet: LocalWallet = private_key.parse::<LocalWallet>()?.with_chain_id(chain_id);
     
 

@@ -8,9 +8,9 @@ services:
     container_name: symbiotic-restaking-service
     restart: unless-stopped
     environment:
-      - PRIVATE_KEY=eaaa2702cad0c15b0cd341673c46d6936f87be6c3334c41a616201ea6931297a
+      - PRIVATE_KEY=1e91d879daec318b8a5f97fb9b08f9753740196a65c8f9e62fd9e45961eaba8a
       - ETHEREUM_RPC_URL=https://ethereum-sepolia-rpc.publicnode.com
-      - CONTRACT_ADDRESS=0x0237cdb6Eea2B719fe660A91cD05c2CC607C35d8
+      - CONTRACT_ADDRESS=0x656e79454a277198566412d9bff26f97297633cc
       - RUST_LOG=info
     volumes:
       - ./logs:/app/logs
