@@ -79,7 +79,7 @@ pub struct TaskService {
     operator_state: Arc<OperatorState>,
     square_number_address: Address,
     dss_address: Address,
-    block_number_store: String,
+    // block_number_store: String,
     block_number: u64,
     rpc_url: Url,
     private_key: alloy::signers::local::PrivateKeySigner,
@@ -93,7 +93,7 @@ impl TaskService {
         let contract_manager = ContractManager::new(&config)?;
         let square_number_address = config.txn_verifier_address;
         let dss_address = config.txn_verifier_address;
-        let block_number_store = config.block_number_store.clone();
+        // let block_number_store = config.block_number_store.clone();
         info!("operator_state {:?}",operator_state.operators);
 
         // let block_number: u64 = config.load_block_number()?;
@@ -109,7 +109,7 @@ impl TaskService {
             square_number_address,
             txn_verifier_address,
             dss_address,
-            block_number_store,
+            // block_number_store,
             block_number,
             rpc_url,
             private_key,

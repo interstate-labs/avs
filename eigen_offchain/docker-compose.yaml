@@ -1,8 +1,16 @@
-version: '3.8'
+# Docker Compose configuration
+
 services:
-  eigen-offchain:
-    build: .
+  eigenlayer-restaking:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: eigenlayer-restaking-service
+    restart: unless-stopped
     environment:
-      - HOLESKY_RPC_URL=${HOLESKY_RPC_URL:-https://ethereum-holesky-rpc.publicnode.com}
-      - CONTRACT_ADDRESS=${CONTRACT_ADDRESS}
-      - PRIVATE_KEY=${PRIVATE_KEY}
+      - PRIVATE_KEY=1e91d879daec318b8a5f97fb9b08f9753740196a65c8f9e62fd9e45961eaba8a
+      - ETHEREUM_RPC_URL=https://ethereum-holesky-rpc.publicnode.com/
+      - CONTRACT_ADDRESS=0x054b0D625d936ee0B172c73926A1D517Da7d2197
+      - RUST_LOG=info
+    volumes:
+      - ./logs:/app/logs

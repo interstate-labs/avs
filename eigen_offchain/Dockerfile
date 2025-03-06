@@ -1,23 +1,31 @@
+# Use Alpine for a musl libc environment (for static linking)
+FROM rust:alpine as builder
 
-# Use the official Rust image as base
-FROM rust:1.81-slim-bullseye
+WORKDIR /app
 
-# Create a working directory
-WORKDIR /usr/src/app
+# Install build dependencies
+RUN apk add --no-cache musl-dev openssl-dev pkgconfig git build-base
 
-# Install required system dependencies
-RUN apt-get update && \
-    apt-get install -y pkg-config libssl-dev && \
-    rm -rf /var/lib/apt/lists/*
+# Copy the entire project
+COPY . .
 
-# Copy the Cargo.toml and Cargo.lock files
-COPY Cargo.toml ./
+# Build with musl for static linking
+RUN rustup target add x86_64-unknown-linux-musl
+RUN cargo build --release --target x86_64-unknown-linux-musl
 
-# Copy the source code
-COPY src/ ./src/
+# Use a minimal Alpine image for runtime
+FROM alpine:latest
 
-# Build the application
-RUN cargo build --release
+WORKDIR /app
 
-# Command to run the application
-CMD ["cargo", "run", "--release"]
+# Install minimal runtime dependencies
+RUN apk add --no-cache ca-certificates
+
+# Create logs directory
+RUN mkdir -p /app/logs
+
+# Copy the statically linked binary from the builder stage
+COPY --from=builder /app/target/x86_64-unknown-linux-musl/release/eigen_offchain /app/eigen_offchain
+
+# Run the application with the FetchEvents command
+CMD ["/app/eigen_offchain", "fetch-events"]

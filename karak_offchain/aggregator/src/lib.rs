@@ -23,7 +23,7 @@ pub struct Config {
     pub square_number_dss_address: Address,
     pub txn_verifier_address:Address,
     pub core_address: Address,
-    pub block_number_store: String,
+    // pub block_number_store: String,
     pub heartbeat: u64,
 }
 
