@@ -1,0 +1,12 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: operator
+spec:
+  ports:
+    - port: 3009
+      targetPort: 3009
+      protocol: TCP
+  selector:
+    app: karak-operator

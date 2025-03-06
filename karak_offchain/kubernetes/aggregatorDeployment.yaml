@@ -1,0 +1,62 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: karak-aggregator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: karak-aggregator
+  template:
+    metadata:
+      labels:
+        app: karak-aggregator
+    spec:
+      containers:
+        - name: aggregator
+          image: karak-aggregator:latest
+          ports:
+            - containerPort: 3008
+          env:
+            - name: PORT
+              value: "3008"
+            - name: HOST
+              value: "0.0.0.0"
+            - name: HEARTBEAT
+              value: "5000"
+            - name: RPC_URL
+              value: "https://ethereum-holesky-rpc.publicnode.com"
+            - name: CORS_ORIGIN
+              value: "*"
+            - name: COMMON_RATE_LIMIT_WINDOW_MS
+              value: "1000"
+            - name: COMMON_RATE_LIMIT_MAX_REQUESTS
+              value: "10000"
+            - name: PRIVATE_KEY
+              value: "6d35c1bdf469031cfe3cbaddd57ca69a36835a39c2a6f2cefc17c804851b0635"
+            - name: BLOCK_NUMBER_STORE
+              value: "/app/block-number-store.json"
+            - name: RUST_LOG
+              value: "info"
+            - name: SQUARE_NUMBER_DSS_ADDRESS
+              value: "0x9A9f2CCfdE556A7E9Ff0848998Aa4a0CFD8863AE"
+            - name: TXN_VERIFIER_ADDRESS
+              value: "0xCbb651f2F7FEd1264224D20F75BEF371549E71C9"
+            - name: CORE_ADDRESS
+              value: "0x9bd03768a7DCc129555dE410FF8E85528A4F88b5"
+          volumeMounts:
+            - name: karak-data
+              mountPath: /app/data
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3008
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
+      volumes:
+        - name: karak-data
+          persistentVolumeClaim:
+            claimName: karak-data-pvc
